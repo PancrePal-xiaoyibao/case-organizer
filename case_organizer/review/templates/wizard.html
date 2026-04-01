@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='wizard.css') }}">
+    <script>
+      window.__WIZARD_CONTEXT__ = {
+        workspaceDir: {{ workspace_dir | tojson }},
+        caseRootDir: {{ case_root_dir | tojson }},
+        rawCategories: {{ raw_categories | tojson }},
+        exportGroups: {{ export_groups | tojson }},
+        candidate: {{ candidate | tojson }},
+      };
+    </script>
+    <script src="{{ url_for('static', path='wizard.js') }}" defer></script>
+  </head>
+  <body>
+    <main class="wizard-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Case Organizer</p>
+          <h1>病情资料整理向导</h1>
+          <p class="lede">
+            先建立病例目录，再把资料放进对应分类，随后完成自动整理、校对和导出。
+          </p>
+        </div>
+        <div class="hero-meta">
+          <div class="meta-card">
+            <span class="meta-label">默认病例根目录</span>
+            <strong id="case-root">{{ case_root_dir }}</strong>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">当前打开目录</span>
+            <strong id="workspace-dir">{{ current_case_root_dir }}</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="progress" aria-label="向导进度">
+        <button class="progress-step is-active" data-step-chip="1" type="button" onclick="window.caseWizard.goToStep(1)">创建病例</button>
+        <button class="progress-step" data-step-chip="2" type="button" onclick="window.caseWizard.goToStep(2)">放入资料</button>
+        <button class="progress-step" data-step-chip="3" type="button" onclick="window.caseWizard.goToStep(3)">检查资料</button>
+        <button class="progress-step" data-step-chip="4" type="button" onclick="window.caseWizard.goToStep(4)">开始整理</button>
+        <button class="progress-step" data-step-chip="5" type="button" onclick="window.caseWizard.goToStep(5)">校对结果</button>
+        <button class="progress-step" data-step-chip="6" type="button" onclick="window.caseWizard.goToStep(6)">导出结果</button>
+      </section>
+
+      <section class="layout">
+        <article class="paper">
+          <div class="paper-head">
+            <div>
+              <p class="section-label">当前步骤</p>
+              <h2 id="step-title">创建病例</h2>
+            </div>
+            <div class="status-pill" id="step-status">本地优先 · 单患者 · 纸张式向导</div>
+          </div>
+
+          <section class="wizard-panel is-active" data-step-panel="1">
+            <div class="step-grid">
+              <section class="step-card">
+                <h3>病例初始化</h3>
+                <p>输入病例名称即可在固定目录下创建标准病例树。</p>
+                <label class="field">
+                  <span>病例名称</span>
+                  <input id="case-name" type="text" placeholder="patient001" autocomplete="off">
+                </label>
+                <button class="primary-btn" type="button" onclick="window.caseWizard.createCase()">创建病例目录</button>
+                <p class="field-hint">新病例会默认创建在：<code>{{ case_root_dir }}</code></p>
+              </section>
+
+              <section class="step-card">
+                <h3>目录约定</h3>
+                <ul class="category-list">
+                  <li>基本资料</li>
+                  <li>诊断报告书</li>
+                  <li>影像报告</li>
+                  <li>病理与基因</li>
+                  <li>检验检查</li>
+                  <li>处方与用药</li>
+                  <li>个人病情记录</li>
+                  <li>手术与住院资料</li>
+                  <li>待分类</li>
+                </ul>
+              </section>
+            </div>
+            <div class="wizard-actions">
+              <button class="primary-btn next-btn" type="button" onclick="window.caseWizard.goToStep(2)">下一步：放入资料</button>
+            </div>
+          </section>
+
+          <section class="wizard-panel" data-step-panel="2">
+            <div class="paper-head compact">
+              <div>
+                <p class="section-label">资料放置</p>
+                <h3>按分类上传文件</h3>
+              </div>
+              <span class="muted">支持多文件上传，单文件不超过 {{ max_upload_size_mb }}MB</span>
+            </div>
+            <div class="category-grid">
+              {% for category in raw_categories %}
+                <article class="category-card" data-category-key="{{ category.key }}">
+                  <h4>{{ category.label }}</h4>
+                  {% if category.examples %}
+                    <p class="category-examples">{{ category.examples | join(" · ") }}</p>
+                  {% endif %}
+                  {% if category.children %}
+                    <div class="child-tags">
+                      {% for child in category.children %}
+                        <span>{{ child }}</span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <input class="file-input" type="file" data-file-input="{{ category.key }}" multiple>
+                  <button class="secondary-btn" type="button" data-upload-button="{{ category.key }}">上传到这里</button>
+                </article>
+              {% endfor %}
+            </div>
+            <section class="step-card file-list-card">
+              <div class="paper-head compact">
+                <div>
+                  <p class="section-label">上传成功文件</p>
+                  <h3>当前已放入资料</h3>
+                </div>
+                <button class="secondary-btn" type="button" onclick="window.caseWizard.refreshInspect()">刷新列表</button>
+              </div>
+              <div id="upload-file-list" class="file-list-empty">还没有上传文件。</div>
+            </section>
+            <div class="wizard-actions">
+              <button class="ghost-btn" type="button" onclick="window.caseWizard.goToStep(1)">返回上一步</button>
+              <button class="primary-btn next-btn" type="button" onclick="window.caseWizard.refreshInspect()">下一步：检查资料</button>
+            </div>
+          </section>
+
+          <section class="wizard-panel" data-step-panel="3">
+            <div class="paper-head compact">
+              <div>
+                <p class="section-label">资料检查</p>
+                <h3>确认分类是否齐全</h3>
+              </div>
+              <button class="secondary-btn" type="button" onclick="window.caseWizard.refreshInspect()">刷新检查</button>
+            </div>
+            <div class="inspect-grid" id="inspect-output">
+              <p class="empty">初始化后会显示文件总数、分类分布和缺失提醒。</p>
+            </div>
+            <section class="step-card file-list-card">
+              <div class="paper-head compact">
+                <div>
+                  <p class="section-label">检查与处理</p>
+                  <h3>文件清单</h3>
+                </div>
+                <span class="muted">可改分类、删除或重新上传</span>
+              </div>
+              <div id="inspect-file-list" class="file-list-empty">检查完成后会显示文件清单。</div>
+            </section>
+            <div class="wizard-actions">
+              <button class="ghost-btn" type="button" onclick="window.caseWizard.goToStep(2)">返回上一步</button>
+              <button class="primary-btn next-btn" type="button" onclick="window.caseWizard.runScan()">下一步：开始整理</button>
+            </div>
+          </section>
+
+          <section class="wizard-panel" data-step-panel="4">
+            <div class="paper-head compact">
+              <div>
+                <p class="section-label">开始整理</p>
+                <h3>运行本地整理流程</h3>
+              </div>
+              <button class="primary-btn" type="button" onclick="window.caseWizard.runScan()">开始整理</button>
+            </div>
+            <div class="process-log" id="scan-output">
+              <p class="empty">点击开始整理后，这里会显示处理进度和失败文件。</p>
+            </div>
+            <div class="wizard-actions">
+              <button class="ghost-btn" type="button" onclick="window.caseWizard.goToStep(3)">返回检查资料</button>
+              <button class="primary-btn next-btn" type="button" onclick="window.caseWizard.loadCandidate()">下一步：校对结果</button>
+            </div>
+          </section>
+
+          <section class="wizard-panel" data-step-panel="5">
+            <div class="paper-head compact">
+              <div>
+                <p class="section-label">校对结果</p>
+                <h3>查看候选病情结构</h3>
+              </div>
+              <button class="secondary-btn" type="button" onclick="window.caseWizard.loadCandidate()">重新读取</button>
+            </div>
+            <section class="candidate-card">
+              {% if candidate_json %}
+                <pre id="candidate-json">{{ candidate_json }}</pre>
+              {% else %}
+                <p class="empty">当前还没有候选病情结构。</p>
+              {% endif %}
+            </section>
+            <div class="wizard-actions">
+              <button class="ghost-btn" type="button" onclick="window.caseWizard.goToStep(4)">返回整理结果</button>
+              <button class="primary-btn next-btn" type="button" onclick="window.caseWizard.loadExportSummary()">下一步：导出结果</button>
+            </div>
+          </section>
+
+          <section class="wizard-panel" data-step-panel="6">
+            <div class="paper-head compact">
+              <div>
+                <p class="section-label">导出结果</p>
+                <h3>确认输出目录</h3>
+              </div>
+              <button class="secondary-btn" type="button" onclick="window.caseWizard.loadExportSummary()">刷新导出摘要</button>
+            </div>
+            <div class="export-grid" id="export-output">
+              <p class="empty">导出完成后会在这里显示 normalized、legacy、printable 和 summaries 的状态。</p>
+            </div>
+            <div class="wizard-actions">
+              <button class="ghost-btn" type="button" onclick="window.caseWizard.goToStep(5)">返回校对结果</button>
+            </div>
+          </section>
+        </article>
+
+        <aside class="sidebar">
+          <section class="side-card">
+            <p class="section-label">导出分组</p>
+            <ul class="stack-list">
+              {% for group in export_groups %}
+                <li>{{ group }}</li>
+              {% endfor %}
+            </ul>
+          </section>
+
+          <section class="side-card">
+            <p class="section-label">当前状态</p>
+            <div class="status-stack">
+              <span id="wizard-case-state">尚未创建病例</span>
+              <span id="wizard-file-state">尚未检查资料</span>
+              <span id="wizard-scan-state">尚未开始整理</span>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>
