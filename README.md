@@ -1,5 +1,7 @@
 # Case Organizer
 
+[English](README.md) | [中文](README_CN.md)
+
 `case-organizer` is a local-first, single-patient case intake and normalization tool.
 
 It helps patients and caregivers organize medical files into a fixed directory structure, extract content with MinerU or local readers, review a candidate case summary, and export normalized files for `ca199_toolbox`.

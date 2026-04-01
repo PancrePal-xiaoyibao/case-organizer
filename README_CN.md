@@ -1,5 +1,7 @@
 # Case Organizer
 
+[English](README.md) | [中文](README_CN.md)
+
 `case-organizer` 是一个本地优先的单患者病情整理工具。
 
 它的目标不是直接展示病情，而是把患者和家属手里的图片、PDF、Word、Excel、Markdown 等材料整理成：
