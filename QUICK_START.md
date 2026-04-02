@@ -1,5 +1,17 @@
 # Quick Start
 
+## Recommended Flow
+
+`case-organizer` is now designed to work together with `ca199-toolbox-v2`.
+
+The recommended output is:
+
+```text
+exports/normalized/ca199_toolbox_bundle.json
+```
+
+This file is the preferred handoff into `ca199-toolbox-v2`.
+
 ## 1. Install
 
 ```bash
@@ -16,12 +28,11 @@ MINERU_API_TOKEN=your_token
 MINERU_RESULTS_BASE=https://mineru.net/api/v4
 ```
 
-If you do not configure MinerU, local text and CSV readers still work, but PDF/image parsing will not use the remote extraction path.
+If MinerU is not configured, local text and CSV readers still work, but PDF/image parsing will not use the remote extraction path.
 
 ## 3. Create A Case Directory
 
 ```bash
-cd case-organizer
 python -m case_organizer.cli init ./output/patient001
 ```
 
@@ -36,7 +47,7 @@ This creates:
 
 ## 4. Add Files
 
-Place patient files into the matching `raw/` subdirectories, for example:
+Place patient files into matching `raw/` subdirectories, for example:
 
 - `raw/03_影像报告/`
 - `raw/04_病理与基因/`
@@ -46,7 +57,6 @@ Place patient files into the matching `raw/` subdirectories, for example:
 ## 5. Run The Wizard
 
 ```bash
-cd case-organizer
 python -m case_organizer.cli review ./output/patient001/workspace --host 127.0.0.1 --port 8765
 ```
 
@@ -56,7 +66,7 @@ Open:
 http://127.0.0.1:8765
 ```
 
-From the wizard you can:
+The wizard supports:
 
 1. Create a case
 2. Upload multiple files per category
@@ -65,21 +75,37 @@ From the wizard you can:
 5. Review candidate output
 6. Check export summaries
 
-Upload rules:
+Upload limits:
 
 - multiple files supported
 - max size: `10MB` per file
 
-## 6. Run From CLI Only
+## 6. Preferred Export
+
+After scan/export, use:
+
+```text
+exports/normalized/ca199_toolbox_bundle.json
+```
+
+This is the preferred import file for `ca199-toolbox-v2`.
+
+## 7. CLI Scan Only
 
 ```bash
-cd case-organizer
 python -m case_organizer.cli scan ./output/patient001
 ```
 
-## 7. Run Tests
+## 8. Tests
 
 ```bash
-cd case-organizer
 pytest -q
 ```
+
+## 9. Team Docs
+
+For team onboarding, read:
+
+- [README.md](README.md)
+- [docs/TEAM_HANDOFF.md](docs/TEAM_HANDOFF.md)
+- [docs/output-contract.md](docs/output-contract.md)

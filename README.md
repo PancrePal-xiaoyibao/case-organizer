@@ -140,6 +140,7 @@ See [docs/output-contract.md](docs/output-contract.md) for the current file cont
 
 - Chinese README: [README_CN.md](README_CN.md)
 - Quick start: [QUICK_START.md](QUICK_START.md)
+- Team handoff: [docs/TEAM_HANDOFF.md](docs/TEAM_HANDOFF.md)
 
 ## Development
 

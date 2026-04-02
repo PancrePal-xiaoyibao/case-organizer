@@ -42,6 +42,45 @@ TIMELINE_FIELDNAMES = [
 ]
 
 
+def build_indicator_rows(case: StandardCase) -> list[dict[str, Any]]:
+    return [marker.model_dump() for marker in case.tumor_markers]
+
+
+def build_medication_rows(case: StandardCase) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for phase in case.treatments:
+        rows.append(
+            {
+                "start_date": phase.start_date,
+                "end_date": phase.end_date,
+                "drug_name": phase.regimen_name,
+                "tag": phase.regimen_name,
+                "source_file": ";".join(phase.source_files),
+                "confidence": 1.0,
+            }
+        )
+    return rows
+
+
+def build_timeline_rows(case: StandardCase) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for event in case.clinical_events:
+        payload = event.model_dump()
+        rows.append(
+            {
+                "event_date": payload.get("event_date"),
+                "event_type": payload.get("event_type"),
+                "title": payload.get("title"),
+                "description": payload.get("description"),
+                "doctor_note": payload.get("doctor_note"),
+                "patient_note": payload.get("patient_note"),
+                "next_step": payload.get("next_step"),
+                "source_file": ";".join(payload.get("related_sources", [])),
+            }
+        )
+    return rows
+
+
 def _coerce_scalar(value: Any) -> str:
     if value is None:
         return ""
@@ -62,42 +101,14 @@ def _write_csv(path: Path, fieldnames: list[str], rows: Iterable[dict[str, Any]]
 
 def export_indicators_csv(case: StandardCase, output_dir: Path) -> Path:
     """Export tumor markers as `indicators.csv`."""
-    rows = [marker.model_dump() for marker in case.tumor_markers]
-    return _write_csv(output_dir / "indicators.csv", INDICATOR_FIELDNAMES, rows)
+    return _write_csv(output_dir / "indicators.csv", INDICATOR_FIELDNAMES, build_indicator_rows(case))
 
 
 def export_medications_csv(case: StandardCase, output_dir: Path) -> Path:
     """Export treatment phases as `medications.csv`."""
-    rows: list[dict[str, Any]] = []
-    for phase in case.treatments:
-        rows.append(
-            {
-                "start_date": phase.start_date,
-                "end_date": phase.end_date,
-                "drug_name": phase.regimen_name,
-                "tag": phase.regimen_name,
-                "source_file": ";".join(phase.source_files),
-                "confidence": 1.0,
-            }
-        )
-    return _write_csv(output_dir / "medications.csv", MEDICATION_FIELDNAMES, rows)
+    return _write_csv(output_dir / "medications.csv", MEDICATION_FIELDNAMES, build_medication_rows(case))
 
 
 def export_timeline_events_csv(case: StandardCase, output_dir: Path) -> Path:
     """Export clinical events as `timeline_events.csv`."""
-    rows: list[dict[str, Any]] = []
-    for event in case.clinical_events:
-        payload = event.model_dump()
-        rows.append(
-            {
-                "event_date": payload.get("event_date"),
-                "event_type": payload.get("event_type"),
-                "title": payload.get("title"),
-                "description": payload.get("description"),
-                "doctor_note": payload.get("doctor_note"),
-                "patient_note": payload.get("patient_note"),
-                "next_step": payload.get("next_step"),
-                "source_file": ";".join(payload.get("related_sources", [])),
-            }
-        )
-    return _write_csv(output_dir / "timeline_events.csv", TIMELINE_FIELDNAMES, rows)
+    return _write_csv(output_dir / "timeline_events.csv", TIMELINE_FIELDNAMES, build_timeline_rows(case))

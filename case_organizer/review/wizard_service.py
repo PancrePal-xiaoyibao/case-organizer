@@ -243,4 +243,9 @@ class WizardService:
         summary["candidate_case"] = candidate_case
         summary["normalized_ready"] = (exports_dir / "normalized").exists()
         summary["legacy_ready"] = (exports_dir / "legacy").exists()
+        bundle_path = exports_dir / "normalized" / "ca199_toolbox_bundle.json"
+        summary["preferred_import"] = {
+            "path": str(bundle_path),
+            "exists": bundle_path.exists(),
+        }
         return summary

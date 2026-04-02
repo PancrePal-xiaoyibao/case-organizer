@@ -245,9 +245,20 @@
       })
       .join("");
 
+    const preferred = payload.preferred_import || null;
+    const preferredBlock = preferred
+      ? `
+        <article class="export-card export-card-primary">
+          <strong>推荐导入文件</strong>
+          <span>${preferred.exists ? "已生成" : "未生成"}</span>
+          <code>${preferred.path}</code>
+        </article>
+      `
+      : "";
+
     output.innerHTML = `
-      <div class="export-grid-inner">${groups}</div>
-      <p class="muted">候选结构已准备好后，可进一步接入 ca199_toolbox 的展示页。</p>
+      <div class="export-grid-inner">${preferredBlock}${groups}</div>
+      <p class="muted">推荐直接把 <code>ca199_toolbox_bundle.json</code> 导入 ca199-toolbox-v2；其余 normalized 文件继续保留用于调试和对照。</p>
     `;
   }
 

@@ -9,6 +9,7 @@ import uvicorn
 
 from case_organizer.config import Settings
 from case_organizer.exporters import (
+    export_ca199_toolbox_bundle_json,
     export_indicators_csv,
     export_medications_csv,
     export_patient_summary_json,
@@ -207,6 +208,7 @@ def _scan_pipeline(source_dir: Path, workspace_dir: Path) -> dict[str, object]:
         "candidate_case": str(review_storage.candidate_case_path),
         "standard_case": str(export_standard_case_json(candidate_case, normalized_dir)),
         "patient_summary": str(export_patient_summary_json(candidate_case, normalized_dir)),
+        "ca199_bundle": str(export_ca199_toolbox_bundle_json(candidate_case, normalized_dir)),
         "indicators": str(export_indicators_csv(candidate_case, normalized_dir)),
         "medications": str(export_medications_csv(candidate_case, normalized_dir)),
         "timeline_events": str(export_timeline_events_csv(candidate_case, normalized_dir)),
